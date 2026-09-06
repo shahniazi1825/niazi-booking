@@ -5,8 +5,13 @@
 const ROUTES = {
   availability: "/webhook/calendar-availability",
   book:         "/webhook/book-appointment",
-  summary:      "/webhook/vapi-post-call"
+  summary:      "/webhook/vapi-post-call",
+  find:         "/webhook/find-appointment",
+  cancel:       "/webhook/cancel-appointment"
 };
+
+// Anything in this list needs the staff PIN. The public page never sends one.
+const STAFF_ONLY = ["find", "cancel"];
 
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -20,10 +25,19 @@ export default async function handler(req, res) {
 
   let body = req.body;
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
-  const { action, payload } = body || {};
+  const { action, payload, pin } = body || {};
 
   const path = ROUTES[action];
   if (!path) return res.status(400).json({ error: "Unknown action" });
+
+  // Staff gate. An override is a staff power even on the shared book action.
+  const staffPin = process.env.STAFF_PIN;
+  const wantsStaff = STAFF_ONLY.includes(action) || payload?.override === true;
+  if (wantsStaff) {
+    if (!staffPin || pin !== staffPin) {
+      return res.status(401).json({ error: "Staff PIN required" });
+    }
+  }
 
   // A booking created here is a real calendar event, so refuse obvious junk
   if (action === "book") {
