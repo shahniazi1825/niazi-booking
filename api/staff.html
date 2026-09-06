@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front desk — Niazi Clinic</title>
+<style>
+  :root{--ink:#111827;--body:#374151;--muted:#6B7280;--line:#E2E8F0;
+        --bg:#F1F5F9;--card:#fff;--nav:#1E293B;--acc:#0F766E;--acc-l:#E6F5F3;
+        --warn:#B45309;--warn-bg:#FFFBEB;--dang:#B91C1C;--dang-bg:#FEF2F2}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--body);
+       font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 14px 60px}
+  header{background:var(--nav);border-radius:10px 10px 0 0;padding:18px 24px;color:#fff;
+         display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:17px;font-weight:600}
+  header span{font-size:12px;color:#94A3B8;letter-spacing:1.2px;text-transform:uppercase}
+  nav{background:var(--nav);padding:0 24px 14px;display:flex;gap:8px}
+  nav button{padding:8px 16px;font:600 14px inherit;color:#94A3B8;background:#334155;
+             border:0;border-radius:6px;cursor:pointer}
+  nav button.on{background:#fff;color:var(--nav)}
+  .card{background:var(--card);border-radius:0 0 10px 10px;padding:24px}
+  .pane{display:none}.pane.on{display:block}
+  h2{margin:0 0 3px;font-size:16px;font-weight:600;color:var(--ink)}
+  .hint{margin:0 0 16px;font-size:13px;color:var(--muted)}
+  label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:14px 0 5px}
+  select,input,textarea{width:100%;padding:10px 12px;font:15px inherit;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:7px}
+  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--acc);
+    box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+  textarea{resize:vertical;min-height:56px}
+  .row{display:flex;gap:12px}.row>div{flex:1}
+  button.go{width:100%;padding:12px;margin-top:18px;font:600 15px inherit;color:#fff;
+    background:var(--acc);border:0;border-radius:7px;cursor:pointer}
+  button.go:hover{background:#0B5A54}
+  button.go:disabled{background:#9CA3AF;cursor:not-allowed}
+  button.gh{background:#fff;color:var(--body);border:1px solid var(--line)}
+  button.gh:hover{background:#F8FAFC}
+  button.dg{background:var(--dang)}button.dg:hover{background:#991B1B}
+  .slot{width:100%;text-align:left;padding:12px 14px;margin:0 0 8px;background:#fff;
+    border:1px solid var(--line);border-radius:7px;cursor:pointer;font:inherit;color:var(--ink)}
+  .slot:hover{border-color:var(--acc);background:var(--acc-l)}
+  .slot b{display:block;font-size:16px}
+  .slot span{font-size:13px;color:var(--muted)}
+  .msg{padding:12px 14px;border-radius:7px;font-size:14px;margin-top:14px}
+  .msg.err{background:var(--dang-bg);color:#7F1D1D}
+  .msg.ok{background:var(--acc-l);color:#134E4A}
+  .msg.warn{background:var(--warn-bg);color:#78350F}
+  .ovr{background:var(--warn-bg);border:1px solid #FDE68A;border-radius:7px;
+       padding:14px 16px;margin-top:16px}
+  .ovr label{margin-top:0;display:flex;align-items:center;gap:8px;color:#78350F}
+  .ovr input[type=checkbox]{width:auto;margin:0}
+  .ovr p{margin:6px 0 0;font-size:13px;color:#92400E}
+  .spin{text-align:center;padding:24px 0;color:var(--muted);font-size:14px}
+  .rec{border:1px solid var(--line);border-radius:7px;padding:14px 16px;margin-bottom:10px}
+  .rec b{display:block;font-size:15px;color:var(--ink)}
+  .rec span{font-size:13px;color:var(--muted)}
+  .rec .acts{margin-top:10px;display:flex;gap:8px}
+  .rec .acts button{flex:1;padding:8px;font:600 13px inherit;border-radius:6px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--body);margin:0}
+  .rec .acts button.d{color:var(--dang);border-color:#FECACA}
+  .lock{max-width:340px;margin:80px auto;background:#fff;border-radius:10px;padding:28px}
+  .err-txt{color:var(--dang);font-size:12px;margin-top:4px;display:none}
+</style>
+</head>
+<body>
+
+<div id="lock" class="lock">
+  <h2>Front desk</h2>
+  <p class="hint">Enter the staff PIN.</p>
+  <input id="pin" type="password" placeholder="PIN" onkeydown="if(event.key==='Enter')unlock()">
+  <div class="err-txt" id="e-pin">Wrong PIN.</div>
+  <button class="go" onclick="unlock()">Open</button>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+<header>
+  <h1>Niazi Clinic</h1>
+  <span>Front desk</span>
+</header>
+<nav>
+  <button id="t-book" class="on" onclick="tab('book')">Book</button>
+  <button id="t-walk" onclick="tab('walk')">Walk-in now</button>
+  <button id="t-find" onclick="tab('find')">Find &amp; cancel</button>
+</nav>
+<div class="card">
+
+<!-- BOOK -->
+<section id="p-book" class="pane on">
+  <h2>Book an appointment</h2>
+  <p class="hint">Pick the treatment and day. Free times appear with the dentist already assigned.</p>
+
+  <label for="svc">Treatment</label>
+  <select id="svc">
+    <option value="">Choose</option>
+    <option value="new patient exam">New patient exam and X-rays (60)</option>
+    <option value="routine checkup">Routine check-up (30)</option>
+    <option value="cleaning">Standard cleaning (45)</option>
+    <option value="child checkup">Child check-up (30)</option>
+    <option value="pain visit">Pain visit (30)</option>
+    <option value="filling">Filling (45)</option>
+    <option value="crown fitting">Crown fitting (90)</option>
+    <option value="implant consultation">Implant consultation (60)</option>
+    <option value="denture consultation">Denture consultation (60)</option>
+    <option value="root canal">Root canal (90)</option>
+    <option value="extraction">Extraction (45)</option>
+    <option value="whitening">Whitening (90)</option>
+    <option value="veneer consultation">Veneer consultation (60)</option>
+    <option value="aligner consultation">Aligner consultation (60)</option>
+  </select>
+  <div class="err-txt" id="e-svc">Choose a treatment.</div>
+
+  <div class="row">
+    <div>
+      <label for="day">Day</label>
+      <input type="date" id="day">
+      <div class="err-txt" id="e-day">Choose a day.</div>
+    </div>
+    <div>
+      <label for="doc">Dentist</label>
+      <select id="doc">
+        <option value="">Automatic</option>
+        <option>Dr. Sarah Niazi</option>
+        <option>Dr. Marcus Webb</option>
+        <option>Dr. Elena Petrova</option>
+        <option>Dr. James Okonkwo</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="go" onclick="findSlots()">Show free times</button>
+  <div id="slots" style="margin-top:16px"></div>
+  <div id="bmsg"></div>
+
+  <div class="ovr">
+    <label><input type="checkbox" id="ovr" onchange="ovrToggle()"> Override — book a time the system says is not free</label>
+    <p>Only when the dentist has agreed to squeeze someone in. It ignores clashes, lunch,
+       opening hours and days off. It does not ignore a patient who is already booked that day.</p>
+    <div id="ovrbox" style="display:none">
+      <div class="row" style="margin-top:12px">
+        <div><label for="otime">Time (24h)</label><input id="otime" placeholder="14:30"></div>
+        <div><label for="oreason">Reason</label><input id="oreason" placeholder="Dr. Niazi agreed"></div>
+      </div>
+      <button class="go" style="background:var(--warn)" onclick="overrideBook()">Force this booking</button>
+    </div>
+  </div>
+</section>
+
+<!-- WALK IN -->
+<section id="p-walk" class="pane">
+  <h2>Walk-in now</h2>
+  <p class="hint">Finds the earliest free time today for whoever can take it.</p>
+
+  <label for="wsvc">Treatment</label>
+  <select id="wsvc">
+    <option value="pain visit">Pain visit (30)</option>
+    <option value="routine checkup">Routine check-up (30)</option>
+    <option value="cleaning">Standard cleaning (45)</option>
+    <option value="filling">Filling (45)</option>
+    <option value="extraction">Extraction (45)</option>
+    <option value="new patient exam">New patient exam (60)</option>
+  </select>
+
+  <button class="go" onclick="walkin()">Find the next free time today</button>
+  <div id="wslots" style="margin-top:16px"></div>
+  <div id="wmsg"></div>
+</section>
+
+<!-- FIND -->
+<section id="p-find" class="pane">
+  <h2>Find an appointment</h2>
+  <p class="hint">Search by phone number or name.</p>
+
+  <div class="row">
+    <div><label for="fph">Phone</label><input id="fph" placeholder="868 555 1111"></div>
+    <div><label for="fnm">Or name</label><input id="fnm" placeholder="Ayan Hafeez"></div>
+  </div>
+  <button class="go" onclick="findAppt()">Search</button>
+  <div id="results" style="margin-top:16px"></div>
+  <div id="fmsg"></div>
+</section>
+
+<!-- PATIENT DETAILS (shared by book + walk-in) -->
+<section id="p-det" class="pane">
+  <h2>Patient details</h2>
+  <p class="hint" id="detsub"></p>
+
+  <label for="nm">Full name</label>
+  <input id="nm" placeholder="Ayan Hafeez">
+  <div class="err-txt" id="e-nm">Enter a name.</div>
+
+  <div class="row">
+    <div><label for="ph">Phone</label><input id="ph" placeholder="868 555 1111">
+      <div class="err-txt" id="e-ph">Need at least 7 digits.</div></div>
+    <div><label for="em">Email (optional)</label><input id="em" placeholder="you@example.com">
+      <div class="err-txt" id="e-em">Not a valid email.</div></div>
+  </div>
+
+  <label for="nt">Notes for the dentist</label>
+  <textarea id="nt" placeholder="Walk-in, upper left pain since Tuesday"></textarea>
+
+  <button class="go" id="cbtn" onclick="confirmBooking()">Confirm booking</button>
+  <button class="go gh" onclick="tab(lastTab)">Back</button>
+  <div id="dmsg"></div>
+</section>
+
+</div>
+</div>
+
+<script>
+var API="/api/clinic", PIN="", picked=null, ctx=null, lastTab="book", forced=false;
+
+function unlock(){
+  var v=document.getElementById("pin").value.trim();
+  if(v.length<4){ document.getElementById("e-pin").style.display="block"; return; }
+  PIN=v;
+  document.getElementById("lock").style.display="none";
+  document.getElementById("app").style.display="block";
+  var t=new Date(Date.now()+864e5).toISOString().slice(0,10);
+  document.getElementById("day").value=t;
+  document.getElementById("day").min=new Date().toISOString().slice(0,10);
+}
+function tab(n){
+  ["book","walk","find","det"].forEach(function(x){
+    var p=document.getElementById("p-"+x); if(p) p.classList.remove("on");
+    var b=document.getElementById("t-"+x); if(b) b.classList.remove("on");
+  });
+  document.getElementById("p-"+n).classList.add("on");
+  var b=document.getElementById("t-"+n); if(b) b.classList.add("on");
+  if(n!=="det") lastTab=n;
+  window.scrollTo(0,0);
+}
+function show(id,c,t){document.getElementById(id).innerHTML=t?'<div class="msg '+c+'">'+t+'</div>':'';}
+function fe(id,on){document.getElementById(id).style.display=on?"block":"none";}
+function ovrToggle(){
+  document.getElementById("ovrbox").style.display=
+    document.getElementById("ovr").checked?"block":"none";
+}
+
+async function api(action,payload){
+  var r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action:action,payload:payload,pin:PIN})});
+  if(r.status===401) throw new Error("PIN rejected");
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return await r.json();
+}
+
+var SMSG={clinic_closed:"Clinic closed that day.",
+  doctor_not_working:"That dentist is not in that day.",
+  doctor_on_leave:"That dentist is away that day.",
+  no_slots:"Nothing free that day.",
+  date_in_past:"That day has passed.",
+  too_far_ahead:"More than 90 days ahead."};
+
+async function loadSlots(svc,day,doc,into,msgId){
+  document.getElementById(into).innerHTML='<div class="spin">Checking…</div>';
+  show(msgId,"","");
+  try{
+    var res=await api("availability",{appointment_type:svc,appointment_date:day,
+      doctor_name:doc||"",max_slots:8});
+    document.getElementById(into).innerHTML="";
+    if(res.status!=="slots_available"||!res.slots||!res.slots.length){
+      show(msgId,"err",SMSG[res.status]||"Nothing available.");
+      return null;
+    }
+    ctx=res; ctx.service=svc;
+    res.slots.forEach(function(s){
+      var b=document.createElement("button");
+      b.className="slot";
+      b.innerHTML="<b>"+s.time_spoken+"</b><span>"+res.doctor_name+" · "+
+                  res.duration_minutes+" min · "+res.date_spoken+"</span>";
+      b.onclick=function(){ picked=s; forced=false; openDetails(); };
+      document.getElementById(into).appendChild(b);
+    });
+    return res;
+  }catch(e){ show(msgId,"err",e.message); return null; }
+}
+
+function findSlots(){
+  var svc=document.getElementById("svc").value, day=document.getElementById("day").value;
+  fe("e-svc",!svc); fe("e-day",!day);
+  if(!svc||!day) return;
+  loadSlots(svc,day,document.getElementById("doc").value,"slots","bmsg");
+}
+
+function walkin(){
+  var svc=document.getElementById("wsvc").value;
+  var today=new Date().toISOString().slice(0,10);
+  loadSlots(svc,today,"","wslots","wmsg");
+}
+
+function openDetails(){
+  document.getElementById("detsub").textContent =
+    (forced?"OVERRIDE · ":"") + ctx.date_spoken + " at " +
+    (picked.time_spoken||picked.time_24) + " with " + ctx.doctor_name;
+  tab("det");
+}
+
+function overrideBook(){
+  var svc=document.getElementById("svc").value, day=document.getElementById("day").value;
+  var t=document.getElementById("otime").value.trim();
+  var reason=document.getElementById("oreason").value.trim();
+  fe("e-svc",!svc); fe("e-day",!day);
+  if(!svc||!day) return;
+  if(!/^\d{1,2}:\d{2}$/.test(t)){ show("bmsg","err","Enter the time as 14:30."); return; }
+  if(!reason){ show("bmsg","err","Enter a reason for the override."); return; }
+  ctx={appointment_date:day,date_spoken:day,service:svc,
+       doctor_name:document.getElementById("doc").value||"Assigned automatically",
+       override_reason:reason};
+  picked={time_24:t,time_spoken:t};
+  forced=true;
+  openDetails();
+}
+
+async function confirmBooking(){
+  var nm=document.getElementById("nm").value.trim();
+  var ph=document.getElementById("ph").value.trim();
+  var em=document.getElementById("em").value.trim();
+  var dig=ph.replace(/\D/g,"");
+  var emOk = em==="" || /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em);
+  fe("e-nm",!nm); fe("e-ph",dig.length<7); fe("e-em",!emOk);
+  if(!nm||dig.length<7||!emOk) return;
+
+  var btn=document.getElementById("cbtn");
+  btn.disabled=true; btn.textContent="Booking…"; show("dmsg","","");
+
+  var payload={patient_name:nm,patient_phone:ph,patient_email:em,
+    appointment_type:ctx.service,appointment_date:ctx.appointment_date,
+    appointment_time:picked.time_24,
+    notes:document.getElementById("nt").value.trim(),
+    source:lastTab==="walk"?"walkin":"frontdesk"};
+  if(document.getElementById("doc").value) payload.doctor_name=document.getElementById("doc").value;
+  if(forced){ payload.override=true; payload.override_reason=ctx.override_reason; }
+
+  try{
+    var res=await api("book",payload);
+    if(res.status!=="booked"){
+      var m={slot_taken:"That time was just taken. Pick another.",
+        already_booked:"This patient already has an appointment that day at "+
+          (res.existing_time||"")+". Move that one instead.",
+        lunch_break:"That falls in the lunch break.",
+        outside_hours:"Outside opening hours.",
+        clinic_closed:"Clinic closed that day.",
+        missing_data:"Something is missing."};
+      show("dmsg","err",m[res.status]||"Booking failed.");
+      btn.disabled=false; btn.textContent="Confirm booking"; return;
+    }
+    await api("summary",{intent:"booking",channel:payload.source,
+      patient_name:nm,patient_phone:ph,patient_email:em,appointment_booked:true,
+      appointment_date:ctx.appointment_date,appointment_time:picked.time_24,
+      doctor_name:res.doctor_name||ctx.doctor_name,appointment_type:ctx.service,
+      calendar_event_id:res.appointment_id||"",emergency_flag:false,
+      follow_up_needed:false,transfer_attempted:false,transfer_result:"not_attempted"});
+
+    show("dmsg","ok","Booked — "+res.spoken_time+" with "+res.doctor_name+
+      ". Confirmation email sent if an address was given.");
+    ["nm","ph","em","nt","otime","oreason"].forEach(function(x){
+      document.getElementById(x).value="";});
+    document.getElementById("ovr").checked=false; ovrToggle(); forced=false;
+    btn.disabled=false; btn.textContent="Confirm booking";
+  }catch(e){
+    show("dmsg","err",e.message);
+    btn.disabled=false; btn.textContent="Confirm booking";
+  }
+}
+
+async function findAppt(){
+  var ph=document.getElementById("fph").value.trim();
+  var nm=document.getElementById("fnm").value.trim();
+  if(!ph&&!nm){ show("fmsg","err","Enter a phone number or a name."); return; }
+  document.getElementById("results").innerHTML='<div class="spin">Searching…</div>';
+  show("fmsg","","");
+  try{
+    var res=await api("find",{patient_phone:ph,patient_name:nm});
+    document.getElementById("results").innerHTML="";
+    if(!res.appointments||!res.appointments.length){
+      show("fmsg","err","Nothing found."); return;
+    }
+    res.appointments.forEach(function(a){
+      var d=document.createElement("div");
+      d.className="rec";
+      d.innerHTML="<b>"+a.spoken_time+"</b><span>"+a.patient_name+" · "+
+        a.doctor_name+" · "+(a.appointment_type||"")+"</span>"+
+        '<div class="acts"><button class="d">Cancel this</button></div>';
+      d.querySelector("button").onclick=function(){ doCancel(a,d); };
+      document.getElementById("results").appendChild(d);
+    });
+  }catch(e){ show("fmsg","err",e.message); }
+}
+
+async function doCancel(a,el){
+  if(!confirm("Cancel "+a.spoken_time+" for "+a.patient_name+"?")) return;
+  try{
+    var res=await api("cancel",{appointment_id:a.appointment_id,
+      confirm_cancellation:true,cancellation_reason:"Cancelled at the front desk"});
+    if(res.status==="cancelled"){
+      el.style.opacity=".45";
+      el.querySelector(".acts").innerHTML='<span style="color:#B91C1C;font-size:13px">Cancelled</span>';
+      show("fmsg","ok","Cancelled. The slot is free again.");
+    } else {
+      show("fmsg","err","Could not cancel. Try again.");
+    }
+  }catch(e){ show("fmsg","err",e.message); }
+}
+</script>
+</body>
+</html>
