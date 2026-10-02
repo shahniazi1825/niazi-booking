@@ -6,6 +6,8 @@ import { getActor } from "../_staffauth.js";
 
 const W = ["receptionist", "manager", "admin"];
 const ALL = ["viewer", ...W];
+const MGR = ["manager", "admin"];
+const TABS = ["overview", "bookings", "schedule", "frontdesk", "recovery"];
 const patient = (p) => (p && typeof p === "object" ? clean({ full_name: str(p.full_name, 120), phone_e164: phone(p.phone_e164 ?? p.phone), email: email(p.email) }) : {});
 const override = (b, role) => (["manager", "admin"].includes(role) && b.override === true
   ? { override: true, override_reason: str(b.override_reason, 300) } : {});
@@ -13,6 +15,7 @@ const override = (b, role) => (["manager", "admin"].includes(role) && b.override
 // op -> [roles, n8n path, payload builder]
 const OPS = {
   "dashboard":          [ALL, "console", (b) => clean({ date: date(b.date) })],
+  "analytics":          [MGR, "console", (b) => clean({ tab: TABS.includes(b.tab) ? b.tab : undefined, from: date(b.from), to: date(b.to) })],
   "timeline":           [W, "console", (b) => clean({ appointment_id: uuid(b.appointment_id) })],
   "patient-search":     [W, "console", (b) => clean({ query: str(b.query, 80) })],
   "patient-update":     [W, "console", (b) => clean({ patient_id: uuid(b.patient_id), full_name: str(b.full_name, 120), phone_e164: str(b.phone_e164, 32), email: str(b.email, 200) })],
@@ -31,6 +34,11 @@ const OPS = {
   "message":            [W, "message", (b) => clean({ name: str(b.name, 120), phone: phone(b.phone), email: email(b.email), message: str(b.message, 1000) })]
 };
 const WRITES = new Set(["patient-update", "task-update", "appointment-status", "book", "hold", "commit-hold", "release-hold", "cancel-preview", "cancel-commit", "reschedule", "message"]);
+
+// Owner analytics are aggregates that change slowly: keep each answer for 60 s per clinic+tab+range
+// so several managers (or a wall screen) don't hit the database on every refresh.
+const aCache = new Map();
+const A_TTL = 60000;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("allow", "POST"); return send(res, 405, { success: false, status: "method_not_allowed" }); }
@@ -56,7 +64,12 @@ export default async function handler(req, res) {
     ? { request_id: requestId, operation: op, trusted_actor, payload }
     : { request_id: requestId, trusted_actor, payload };
 
+  const ck = op === "analytics" ? [actor.clinic_slug, payload.tab, payload.from, payload.to].join("|") : null;
+  const hit = ck && aCache.get(ck);
+  if (hit && hit.until > Date.now() && !b.refresh) return send(res, 200, { ...hit.json, cached: true, request_id: requestId });
+
   const out = await callN8n({ channel: "staff", op: spec[1], headerName: "x-avenso-staff-key", secret: process.env.AVENSO_STAFF_KEY, body });
   if (out.status !== 200 && WRITES.has(op)) out.json = { success: false, status: "uncertain", request_id: requestId };
+  if (ck && out.status === 200 && out.json?.success) { aCache.set(ck, { json: out.json, until: Date.now() + A_TTL }); if (aCache.size > 500) aCache.clear(); }
   return send(res, out.status, { ...out.json, request_id: requestId });
 }

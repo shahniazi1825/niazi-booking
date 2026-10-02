@@ -37,6 +37,7 @@
     sw.value = user.clinic_slug; sw.hidden = !memberships || memberships.length < 2;
     document.querySelectorAll(".writer").forEach(function (e) { e.hidden = !writer(); });
     $("bOverride").hidden = !manager();
+    $("insightsLink").hidden = !manager();
     show("app"); $("dDate").value = A.localToday(tz); loadDashboard();
     clearInterval(refreshTimer); refreshTimer = setInterval(function () { if (!document.hidden && $("t-today").classList.contains("on")) loadDashboard(true); }, 60000);
   }
@@ -205,7 +206,12 @@
     if (!p.success) { alert(say(p.status)); return; }
     if (!(await confirmBox("Cancel this appointment?", "<p>" + A.esc(a.patient_name) + " — " + A.esc(A.fmtDate(a.starts_at, tz)) + ", " + A.esc(A.fmtTime(a.starts_at, tz)) + "</p><p class='muted'>The time will be offered to the waiting list automatically.</p>", "Yes, cancel", true))) return;
     var r = await api("cancel-commit", { confirmation_token: p.confirmation_token, explicit_confirm: true });
-    if (!r.success) alert(say(r.status)); loadDashboard(true);
+    if (!r.success) alert(say(r.status)); refreshViews();
+  }
+  // After a change, refresh the day list AND any open patient search, so no screen shows stale appointments.
+  function refreshViews() {
+    loadDashboard(true);
+    if ($("t-patients").classList.contains("on") && $("pQ").value.trim().length >= 3) $("pSearch").requestSubmit();
   }
   async function moveAppt(a) {
     var b = dialog('<h2>Move appointment</h2><p>' + A.esc(a.patient_name) + '</p><label for="mvDate">New date</label><input id="mvDate" type="date"><button type="button" id="mvFind" class="ghost">Show free times</button><div id="mvSlots" class="slots"></div><p id="mvMsg" class="msg"></p>');
@@ -220,7 +226,7 @@
           var rid = A.uuid();
           if (!(await confirmBox("Move appointment?", "<p>" + A.esc(a.patient_name) + "</p><p>From " + A.esc(A.fmtDate(a.starts_at, tz)) + ", " + A.esc(A.fmtTime(a.starts_at, tz)) + "<br>To " + A.esc(A.fmtDate(sl.start_at, tz)) + ", " + A.esc(A.fmtTime(sl.start_at, tz)) + "</p>", "Yes, move it"))) return;
           var res = await api("reschedule", { request_id: rid, appointment_id: a.appointment_id, new_starts_at: sl.start_at, explicit_confirm: true });
-          if (!res.success) alert(say(res.status) + (res.status === "slot_taken" ? " The original time is unchanged." : "")); loadDashboard(true);
+          if (!res.success) alert(say(res.status) + (res.status === "slot_taken" ? " The original time is unchanged." : "")); refreshViews();
         });
         box.appendChild(s);
       });

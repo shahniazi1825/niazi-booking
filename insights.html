@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>Insights — Clinic</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/assets/insights.css">
+</head>
+<body>
+<div class="shell">
+  <header class="bar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div><h1 id="clinicName">Insights</h1><p id="who">Owner &amp; manager view</p></div>
+    </div>
+    <div class="bar-actions">
+      <select id="clinicSwitch" aria-label="Clinic" hidden></select>
+      <a class="link" href="/staff.html">Front desk</a>
+      <button type="button" id="themeBtn" class="icon-btn" aria-label="Switch light or dark theme" title="Light / dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+    </div>
+  </header>
+
+  <!-- Gate: shown when not signed in or not a manager -->
+  <section id="gate" class="gate" hidden>
+    <div class="gate-card">
+      <h2 id="gateTitle">Sign in to see Insights</h2>
+      <p id="gateText">Insights uses your front-desk login.</p>
+      <a class="btn" id="gateBtn" href="/staff.html">Go to sign-in</a>
+    </div>
+  </section>
+
+  <main id="app" hidden>
+    <div class="toolbar">
+      <nav class="tabs" role="tablist" aria-label="Insights sections">
+        <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+        <button role="tab" data-tab="bookings" aria-selected="false">Bookings</button>
+        <button role="tab" data-tab="schedule" aria-selected="false">Schedule</button>
+        <button role="tab" data-tab="frontdesk" aria-selected="false">Front desk &amp; AI</button>
+        <button role="tab" data-tab="recovery" aria-selected="false">Waitlist &amp; revenue</button>
+        <span class="tab-ink" aria-hidden="true"></span>
+      </nav>
+      <div class="range">
+        <div class="seg" role="group" aria-label="Date range">
+          <button type="button" data-range="7">7D</button>
+          <button type="button" data-range="30" class="on">30D</button>
+          <button type="button" data-range="90">90D</button>
+          <button type="button" data-range="365">12M</button>
+          <button type="button" data-range="custom" aria-haspopup="true">Custom</button>
+        </div>
+        <button type="button" id="refreshBtn" class="icon-btn" aria-label="Refresh" title="Refresh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg></button>
+      </div>
+      <form id="customRange" class="custom" hidden>
+        <label>From <input type="date" id="cFrom" required></label>
+        <label>To <input type="date" id="cTo" required></label>
+        <button type="submit" class="btn small">Apply</button>
+      </form>
+    </div>
+    <p class="period" id="period" aria-live="polite"></p>
+    <section id="view" class="view" aria-live="polite"></section>
+    <footer class="foot"><span id="updated"></span><span>Revenue figures are estimates from your treatment prices. Patient details are never shown here.</span></footer>
+  </main>
+</div>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="/assets/common.js"></script>
+<script src="/assets/insights.js"></script>
+</body>
+</html>
