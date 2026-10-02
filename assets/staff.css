@@ -1,0 +1,29 @@
+.wrap.wide{max-width:980px}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:-4px 0 16px}
+.tab{width:auto;margin:0;background:none;color:var(--muted);border-radius:8px 8px 0 0;padding:10px 16px;min-height:44px}
+.tab.on{color:var(--teal);background:var(--teal-light);font-weight:700}
+.tab:hover{background:var(--teal-light)}
+.pane{display:none}.pane.on{display:block}
+.row.tight{align-items:flex-end}.row.tight button{margin-top:0}
+h3{font-size:16px;color:var(--ink);margin:22px 0 8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+.kpi b{display:block;font-size:24px;color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--muted)}
+.item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:8px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.item .main{flex:1 1 260px;min-width:0}
+.item .acts{display:flex;gap:6px;flex-wrap:wrap}
+.item .acts button{width:auto;margin:0;padding:8px 12px;min-height:40px;font-size:14px}
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;margin-left:6px;background:#EEF2F7;color:#334155;vertical-align:middle}
+.badge.urgent,.badge.no_show,.badge.cancelled{background:var(--danger-bg);color:#7F1D1D}
+.badge.confirmed{background:var(--teal-light);color:#134E4A}
+.badge.completed{background:#ECFDF5;color:#065F46}
+.badge.wl{background:#EEF2FF;color:#3730A3}
+.alert.small{padding:10px 14px;margin:10px 0 0;font-size:14px}
+.manager{border:1px dashed #F59E0B;border-radius:10px;padding:10px 14px;margin-top:14px;background:var(--warn-bg)}
+dialog{border:0;border-radius:12px;max-width:640px;width:calc(100% - 32px);padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(15,23,42,.45)}
+.tl{font-size:14px;border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:6px 0}
+.tl small{color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+.editgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}

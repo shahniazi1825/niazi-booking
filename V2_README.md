@@ -9,6 +9,17 @@ The live site on `main` (legacy booking pages) is untouched. This branch is the 
 | `/manage.html` | Confirm identity with a 6-digit code. See upcoming appointments, move one (the old time stays booked until the new one is confirmed) or cancel one (needs a second, explicit confirmation). |
 | `/offer.html?token=…&starts=…` | Accept a waiting-list offer (15 minutes, first person to accept gets it). |
 
+## Staff portal `/staff.html` (Day 8)
+- Each staff member signs in with their own email and password (Supabase Auth). The old shared PIN (`api/clinic.js`) is retired.
+- The session lives in HttpOnly, SameSite=Strict cookies that page JavaScript cannot read. Sessions refresh silently and expire after 12 hours of no refresh.
+- Role and clinic come from the `clinic_members` table, read with the staff member's own login (Row Level Security). The browser can never choose its own role.
+- Roles:
+  - **viewer**: Today screen only, with contact details masked.
+  - **receptionist**: book, move, cancel, mark completed or no-show, close call-backs (a note is required), correct patient details (audited).
+  - **manager/admin**: everything above, plus booking outside the normal rules with a written reason.
+- Server code: `api/_staffauth.js` (login/refresh/role), `api/staff/session.js` (sign in/out, switch clinic), `api/staff/[op].js` (allow-listed operations; forwards to n8n with the staff key).
+- Only failed sign-ins count toward the limit (10 per IP and 5 per email per 15 minutes), so a busy front desk sharing one connection is never locked out.
+
 ## Server proxy `api/public/[op].js`
 - Only these operations are allowed: catalog, availability, hold, commit-hold, release-hold, verification-start/check, find, cancel-preview/commit, reschedule, message, emergency, continuity-resume, waitlist-accept, waitlist-join.
 - Every field is allow-listed and validated. Role, override, clinic and actor fields are never forwarded.
@@ -22,13 +33,16 @@ The live site on `main` (legacy booking pages) is untouched. This branch is the 
 |---|---|---|
 | `AVENSO_N8N_BASE_URL` | n8n base URL (no trailing slash) | same (production n8n) |
 | `AVENSO_PUBLIC_KEY` | value of n8n credential AVENSO_PUBLIC_WEBHOOK_AUTH | production value |
+| `AVENSO_STAFF_KEY` | value of n8n credential AVENSO_STAFF_WEBHOOK_AUTH | production value |
+| `SUPABASE_URL` | `https://<project-ref>.supabase.co` | production project |
+| `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public key | production value |
 | `AVENSO_EXPOSE_DEBUG_CODE` | `1` only while testing with mock notifications | **never** |
 
 ## Clinic display settings
 `assets/config.js`: clinic name override, clinic phone, local emergency number, privacy link. Not secret.
 
 ## Tests
-34 automated browser checks (Playwright against a local copy of the database and the same proxy code) cover:
+29 automated staff-portal checks (roles, masking, cookies, audit, override, refresh, sign-out) plus 34 automated browser checks (Playwright against a local copy of the database and the same proxy code) cover:
 - booking, hold countdown, two-person race, hold release
 - emergency, call-back, waiting list consent
 - verification, reschedule, cancel, waiting-list offer
