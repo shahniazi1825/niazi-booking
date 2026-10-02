@@ -1,0 +1,6 @@
+{
+  "name": "niazi-booking",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" }
+}
