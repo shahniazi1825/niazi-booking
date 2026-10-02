@@ -3,122 +3,370 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Book an appointment — Clinic</title>
-<meta name="description" content="Book, change or cancel your dental appointment online.">
-<link rel="icon" href="data:,">
-<link rel="stylesheet" href="/assets/style.css">
+<title>Book an appointment — Niazi Clinic</title>
+<style>
+  :root{
+    --teal:#0F766E; --teal-dark:#0B5A54; --teal-light:#E6F5F3;
+    --ink:#111827; --body:#374151; --muted:#6B7280;
+    --line:#E2E8F0; --bg:#F4F6F8; --card:#FFFFFF;
+    --danger:#B91C1C; --danger-bg:#FEF2F2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--body);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:620px;margin:0 auto;padding:28px 16px 60px}
+  header{background:var(--teal);border-radius:10px 10px 0 0;padding:26px 28px;color:#fff}
+  header h1{margin:0;font-size:21px;font-weight:600;letter-spacing:-.2px}
+  header p{margin:5px 0 0;font-size:13px;color:#99F6E4}
+  .card{background:var(--card);border-radius:0 0 10px 10px;padding:28px;
+        box-shadow:0 2px 12px rgba(16,24,40,.08)}
+  h2{margin:0 0 4px;font-size:17px;font-weight:600;color:var(--ink)}
+  .hint{margin:0 0 18px;font-size:14px;color:var(--muted)}
+  label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin:18px 0 6px}
+  select,input{width:100%;padding:11px 13px;font-size:16px;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+  select:focus,input:focus{outline:none;border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+  button{width:100%;padding:13px;margin-top:22px;font:600 16px inherit;color:#fff;
+    background:var(--teal);border:0;border-radius:8px;cursor:pointer}
+  button:hover{background:var(--teal-dark)}
+  button:disabled{background:#9CA3AF;cursor:not-allowed}
+  button.ghost{background:none;color:var(--teal);border:1px solid var(--line);margin-top:10px}
+  button.ghost:hover{background:var(--teal-light)}
+  .step{display:none}
+  .step.on{display:block}
+  .choice{display:flex;gap:10px;margin-top:10px}
+  .choice button{margin:0}
+  .choice .no{background:var(--teal)}
+  .choice .yes{background:#fff;color:var(--danger);border:1px solid var(--line)}
+  .choice .yes:hover{background:var(--danger-bg)}
+  .alert{background:var(--danger-bg);border-left:3px solid var(--danger);
+    padding:16px 18px;border-radius:4px;color:#7F1D1D;font-size:15px;margin-top:18px}
+  .alert strong{display:block;font-size:17px;margin-bottom:6px}
+  .alert a{color:#7F1D1D;font-weight:600}
+  .note{background:#FFFBEB;border-left:3px solid #F59E0B;padding:13px 16px;
+    border-radius:4px;color:#78350F;font-size:14px;margin-top:16px}
+  .slot{width:100%;text-align:left;padding:14px 16px;margin:0 0 9px;background:#fff;
+    border:1px solid var(--line);border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
+  .slot:hover{border-color:var(--teal);background:var(--teal-light)}
+  .slot b{display:block;font-size:17px;font-weight:600}
+  .slot span{font-size:14px;color:var(--muted)}
+  .msg{padding:14px 16px;border-radius:8px;font-size:15px;margin-top:16px}
+  .msg.err{background:var(--danger-bg);color:#7F1D1D}
+  .msg.ok{background:var(--teal-light);color:#134E4A}
+  .spin{text-align:center;padding:30px 0;color:var(--muted);font-size:15px}
+  .sum{background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-top:18px}
+  .sum div{display:flex;justify-content:space-between;padding:6px 0;font-size:15px}
+  .sum div span:first-child{color:var(--muted)}
+  .sum div span:last-child{color:var(--ink);font-weight:600;text-align:right}
+  .err-txt{color:var(--danger);font-size:13px;margin-top:5px;display:none}
+  footer{text-align:center;font-size:13px;color:var(--muted);margin-top:22px;line-height:1.7}
+</style>
 </head>
 <body>
 <div class="wrap">
-<header class="top">
-  <div><h1 data-clinic-name>Our clinic</h1><p>Book an appointment online</p></div>
-  <nav><a href="/manage.html">Manage my booking</a></nav>
+<header>
+  <h1>Niazi Clinic</h1>
+  <p>Book an appointment</p>
 </header>
-<main class="card" aria-live="polite">
+<div class="card">
 
-<!-- 1. Emergency check -->
-<section id="b1" class="b step on">
+<!-- STEP 1 — triage gate -->
+<section id="s1" class="step on">
   <h2>Is this a dental emergency?</h2>
-  <p class="hint">For example swelling in the face or neck, bleeding that won't stop, a knocked-out tooth, trouble breathing or swallowing, or severe pain.</p>
-  <div class="row">
-    <button id="notEmergency" type="button">No, book a normal visit</button>
-    <button id="isEmergency" type="button" class="ghost">Yes, it's urgent</button>
+  <p class="hint">Swelling in the face or neck, uncontrolled bleeding, a knocked-out tooth,
+     difficulty breathing or swallowing, or severe pain that will not wait.</p>
+  <div class="choice">
+    <button class="no" onclick="go(2)">No, it can wait</button>
+    <button class="yes" onclick="go('emg')">Yes, it is urgent</button>
   </div>
-  <p id="resumeMsg" class="msg"></p>
 </section>
 
-<!-- 1e. Emergency -->
-<section id="b1e" class="b step">
-  <h2>Urgent help</h2>
-  <div class="alert"><strong>If you have trouble breathing or swallowing, or swelling is spreading, call <span data-emergency-number></span> or go to the nearest emergency department now.</strong></div>
-  <p class="hint">Otherwise, leave your details and the clinic will call you back as a priority.</p>
-  <form id="emergencyForm" novalidate>
-    <label for="eName">Your name</label><input id="eName" autocomplete="name" required>
-    <label for="ePhone">Phone number</label><input id="ePhone" type="tel" autocomplete="tel" required placeholder="+1 868 555 0100">
-    <label for="eMsg">What is happening?</label><textarea id="eMsg" required maxlength="1000"></textarea>
-    <button id="eSend" type="submit">Ask for an urgent call back</button>
-  </form>
-  <button type="button" class="ghost" data-goto="1">Back</button>
-  <p id="eOut" class="msg"></p>
+<!-- EMERGENCY -->
+<section id="semg" class="step">
+  <div class="alert">
+    <strong>Please call us instead</strong>
+    Do not book online for an emergency. Call
+    <a href="tel:+923006288033">+92 300 6288033</a> at any hour, or
+    <a href="tel:03272399700">0327 2399700</a> after hours for the on-call dentist.<br><br>
+    If there is difficulty breathing or swallowing, uncontrolled bleeding, or spreading
+    facial swelling, go to the nearest emergency department first.
+  </div>
+  <button class="ghost" onclick="go(1)">Back</button>
 </section>
 
-<!-- 2. Choose treatment, doctor, date -->
-<section id="b2" class="b step">
-  <h2>Choose a time</h2>
-  <p class="hint">Times are shown in the clinic's local time (<span id="tzName"></span>).</p>
-  <label for="service">Treatment</label><select id="service"></select>
-  <label for="doctor">Doctor</label><select id="doctor"><option value="">Any available doctor</option></select>
-  <label for="date">Date</label><input id="date" type="date">
-  <button id="find" type="button">Show free times</button>
-  <p id="slotsMsg" class="msg"></p>
-  <div id="slots" class="slots" role="list"></div>
-  <button id="nextDay" type="button" class="ghost" hidden>Find the next day with free times</button>
-  <button id="toWaitlist" type="button" class="ghost" hidden>Join the waiting list for an earlier time</button>
+<!-- STEP 2 — treatment and day -->
+<section id="s2" class="step">
+  <h2>What do you need?</h2>
+  <p class="hint">The right dentist is assigned automatically.</p>
+
+  <label for="svc">Treatment</label>
+  <select id="svc">
+    <option value="">Choose a treatment</option>
+    <optgroup label="General">
+      <option value="new patient exam">New patient exam and X-rays (60 min)</option>
+      <option value="routine checkup">Routine check-up (30 min)</option>
+      <option value="cleaning">Standard cleaning (45 min)</option>
+      <option value="child checkup">Child check-up, under 12 (30 min)</option>
+      <option value="filling">Filling (45 min)</option>
+    </optgroup>
+    <optgroup label="Restorative">
+      <option value="crown fitting">Crown fitting (90 min)</option>
+      <option value="implant consultation">Implant consultation (60 min)</option>
+      <option value="denture consultation">Denture consultation (60 min)</option>
+    </optgroup>
+    <optgroup label="Surgery and endodontics">
+      <option value="root canal">Root canal (90 min)</option>
+      <option value="extraction">Extraction (45 min)</option>
+    </optgroup>
+    <optgroup label="Cosmetic">
+      <option value="whitening">Teeth whitening (90 min)</option>
+      <option value="veneer consultation">Veneer consultation (60 min)</option>
+      <option value="aligner consultation">Clear aligner consultation (60 min)</option>
+    </optgroup>
+  </select>
+  <div class="err-txt" id="e-svc">Please choose a treatment.</div>
+
+  <label for="day">Preferred day</label>
+  <input type="date" id="day">
+  <div class="err-txt" id="e-day">Please choose a day.</div>
+
+  <label for="period">Time of day</label>
+  <select id="period">
+    <option value="">Any time</option>
+    <option value="morning">Morning</option>
+    <option value="afternoon">Afternoon</option>
+  </select>
+
+  <button onclick="findSlots()">See available times</button>
+  <button class="ghost" onclick="go(1)">Back</button>
 </section>
 
-<!-- 2m. Treatment not bookable online -->
-<section id="b2m" class="b step">
-  <h2>Request a call back</h2>
-  <p class="hint">This treatment needs a quick chat first. Leave your details and the clinic will call you to arrange it.</p>
-  <form id="msgForm" novalidate>
-    <label for="mName">Your name</label><input id="mName" autocomplete="name">
-    <label for="mPhone">Phone number</label><input id="mPhone" type="tel" autocomplete="tel">
-    <label for="mEmail">Email (optional)</label><input id="mEmail" type="email" autocomplete="email">
-    <label for="mText">Message</label><textarea id="mText" maxlength="1000"></textarea>
-    <button id="mSend" type="submit">Send</button>
-  </form>
-  <button type="button" class="ghost" data-goto="2">Back</button>
-  <p id="mOut" class="msg"></p>
+<!-- STEP 3 — slots -->
+<section id="s3" class="step">
+  <h2>Available times</h2>
+  <p class="hint" id="s3sub"></p>
+  <div id="slots"></div>
+  <div id="s3msg"></div>
+  <button class="ghost" onclick="go(2)">Choose another day</button>
 </section>
 
-<!-- 3. Details while the time is held -->
-<section id="b3" class="b step">
+<!-- STEP 4 — details -->
+<section id="s4" class="step">
   <h2>Your details</h2>
-  <div class="msg warn">We're holding this time for you for <span class="timer" id="timer">2:00</span>.</div>
-  <div class="sum" id="heldSummary"></div>
-  <form id="detailsForm" novalidate>
-    <label for="pName">Full name</label><input id="pName" autocomplete="name" required maxlength="120">
-    <label for="pPhone">Mobile number</label><input id="pPhone" type="tel" autocomplete="tel" required placeholder="+1 868 555 0100">
-    <label for="pEmail">Email (for your confirmation)</label><input id="pEmail" type="email" autocomplete="email">
-    <button id="confirm" type="submit">Confirm booking</button>
-  </form>
-  <button id="releaseBack" type="button" class="ghost">Choose a different time</button>
-  <p id="confirmMsg" class="msg"></p>
+  <p class="hint" id="s4sub"></p>
+
+  <label for="nm">Full name</label>
+  <input id="nm" autocomplete="name" placeholder="Ayan Hafeez">
+  <div class="err-txt" id="e-nm">Please enter your name.</div>
+
+  <label for="ph">Phone number</label>
+  <input id="ph" type="tel" autocomplete="tel" placeholder="868 555 1111">
+  <div class="err-txt" id="e-ph">Please enter a phone number with at least 7 digits.</div>
+
+  <label for="em">Email</label>
+  <input id="em" type="email" autocomplete="email" placeholder="you@example.com">
+  <div class="err-txt" id="e-em">Please enter a valid email, or leave it empty.</div>
+
+  <div class="note">
+    If you have any medical condition, take blood thinners, or are pregnant, please tell
+    the dentist when you arrive.
+  </div>
+
+  <button id="bookBtn" onclick="book()">Confirm booking</button>
+  <button class="ghost" onclick="go(3)">Back</button>
+  <div id="s4msg"></div>
 </section>
 
-<!-- 4. Done -->
-<section id="b4" class="b step">
-  <h2>You're booked</h2>
-  <div class="msg ok">Your appointment is confirmed. We'll send a reminder before your visit.</div>
-  <div class="sum" id="doneSummary"></div>
-  <button id="addCal" type="button">Add to my calendar</button>
-  <button type="button" class="ghost" data-href="/manage.html">Change or cancel</button>
+<!-- STEP 5 — done -->
+<section id="s5" class="step">
+  <h2>You are booked</h2>
+  <p class="hint">A confirmation email is on its way if you gave us an address.</p>
+  <div class="sum" id="sum"></div>
+  <div class="note">
+    Please arrive 10 minutes early. To change or cancel, call
+    <a href="tel:+923006288033">+92 300 6288033</a> at any hour.
+  </div>
 </section>
 
-<!-- 5. Waiting list -->
-<section id="b5" class="b step">
-  <h2>Join the waiting list</h2>
-  <p class="hint">If an earlier time frees up, we'll offer it to you by message. You'll have 15 minutes to accept.</p>
-  <form id="wlForm" novalidate>
-    <label for="wName">Full name</label><input id="wName" autocomplete="name" required>
-    <label for="wPhone">Mobile number</label><input id="wPhone" type="tel" autocomplete="tel">
-    <label for="wEmail">Email</label><input id="wEmail" type="email" autocomplete="email">
-    <div class="row">
-      <div><label for="wFrom">From</label><input id="wFrom" type="date"></div>
-      <div><label for="wTo">Until</label><input id="wTo" type="date"></div>
-    </div>
-    <label class="inline"><input id="wConsent" type="checkbox"> <span>Yes, the clinic may contact me about earlier appointment times.</span></label>
-    <button id="wSend" type="submit">Join the waiting list</button>
-  </form>
-  <button type="button" class="ghost" data-goto="2">Back</button>
-  <p id="wOut" class="msg"></p>
-</section>
-
-</main>
-<footer>Need help? Call <span data-clinic-phone>the clinic</span>.</footer>
 </div>
-<script src="/assets/config.js"></script>
-<script src="/assets/common.js"></script>
-<script src="/assets/book.js"></script>
+<footer>
+  Niazi Clinic &middot; Mon&ndash;Thu 8:00&ndash;17:00 &middot; Wed to 19:00 &middot;
+  Fri 8:00&ndash;15:00 &middot; Sat 9:00&ndash;13:00<br>
+  +92 300 6288033
+</footer>
+</div>
+
+<script>
+var API = "/api/clinic";
+var picked = null, parsed = null;
+
+function go(n){
+  var all = document.querySelectorAll(".step");
+  for (var i=0;i<all.length;i++) all[i].classList.remove("on");
+  document.getElementById("s"+n).classList.add("on");
+  window.scrollTo(0,0);
+}
+function show(id, cls, text){
+  document.getElementById(id).innerHTML =
+    text ? '<div class="msg '+cls+'">'+text+'</div>' : '';
+}
+function fieldErr(id, on){
+  document.getElementById(id).style.display = on ? "block" : "none";
+}
+
+var minDay = new Date(Date.now() + 864e5).toISOString().slice(0,10);
+var maxDay = new Date(Date.now() + 90*864e5).toISOString().slice(0,10);
+document.getElementById("day").min = minDay;
+document.getElementById("day").max = maxDay;
+
+async function api(action, payload){
+  var r = await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: action, payload: payload })
+  });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return await r.json();
+}
+
+async function findSlots(){
+  var svc = document.getElementById("svc").value;
+  var day = document.getElementById("day").value;
+  fieldErr("e-svc", !svc);
+  fieldErr("e-day", !day);
+  if (!svc || !day) return;
+
+  go(3);
+  document.getElementById("s3sub").textContent = "";
+  document.getElementById("slots").innerHTML = '<div class="spin">Checking the diary…</div>';
+  show("s3msg","","");
+
+  try {
+    var res = await api("availability", {
+      appointment_type: svc,
+      appointment_date: day,
+      preferred_period: document.getElementById("period").value,
+      max_slots: 6
+    });
+
+    document.getElementById("slots").innerHTML = "";
+
+    if (res.status !== "slots_available" || !res.slots || !res.slots.length) {
+      var m = {
+        clinic_closed: "The clinic is closed that day. Please choose another.",
+        doctor_not_working: "That dentist is not in that day. Please choose another day.",
+        doctor_on_leave: "That dentist is away that day. Please choose another day.",
+        no_slots: "Nothing free that day. Please try another.",
+        date_in_past: "That day has passed. Please choose an upcoming day.",
+        too_far_ahead: "We book up to 90 days ahead. Please choose a nearer day."
+      };
+      show("s3msg","err", m[res.status] || "Nothing available that day. Please try another.");
+      return;
+    }
+
+    parsed = res;
+    document.getElementById("s3sub").textContent =
+      res.date_spoken + " with " + res.doctor_name;
+
+    res.slots.forEach(function(s){
+      var b = document.createElement("button");
+      b.className = "slot";
+      b.innerHTML = "<b>" + s.time_spoken + "</b><span>" +
+                    res.doctor_name + " · " + res.duration_minutes + " minutes</span>";
+      b.onclick = function(){ choose(s); };
+      document.getElementById("slots").appendChild(b);
+    });
+  } catch (e) {
+    show("s3msg","err","Could not reach the clinic system. Please call +92 300 6288033.");
+  }
+}
+
+function choose(slot){
+  picked = slot;
+  document.getElementById("s4sub").textContent =
+    parsed.date_spoken + " at " + slot.time_spoken + " with " + parsed.doctor_name;
+  go(4);
+}
+
+async function book(){
+  var nm = document.getElementById("nm").value.trim();
+  var ph = document.getElementById("ph").value.trim();
+  var em = document.getElementById("em").value.trim();
+  var digits = ph.replace(/\D/g,"");
+  var emOk = em === "" || /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em);
+
+  fieldErr("e-nm", !nm);
+  fieldErr("e-ph", digits.length < 7);
+  fieldErr("e-em", !emOk);
+  if (!nm || digits.length < 7 || !emOk) return;
+
+  var btn = document.getElementById("bookBtn");
+  btn.disabled = true;
+  btn.textContent = "Booking…";
+  show("s4msg","","");
+
+  try {
+    var res = await api("book", {
+      patient_name: nm,
+      patient_phone: ph,
+      patient_email: em,
+      appointment_type: document.getElementById("svc").value,
+      appointment_date: parsed.appointment_date,
+      appointment_time: picked.time_24,
+      notes: "Booked online"
+    });
+
+    if (res.status !== "booked") {
+      var m = {
+        slot_taken: "Sorry, that time was just taken. Please pick another.",
+        already_booked: "You already have an appointment that day. Please call us to change it.",
+        lunch_break: "That time falls in the lunch break. Please pick another.",
+        outside_hours: "That time is outside opening hours. Please pick another.",
+        clinic_closed: "The clinic is closed that day."
+      };
+      show("s4msg","err", m[res.status] || "That booking did not go through. Please call +92 300 6288033.");
+      btn.disabled = false;
+      btn.textContent = "Confirm booking";
+      if (res.status === "slot_taken") setTimeout(function(){ findSlots(); }, 1800);
+      return;
+    }
+
+    await api("summary", {
+      intent: "booking",
+      channel: "web",
+      patient_name: nm,
+      patient_phone: ph,
+      patient_email: em,
+      appointment_booked: true,
+      appointment_date: parsed.appointment_date,
+      appointment_time: picked.time_24,
+      doctor_name: parsed.doctor_name,
+      appointment_type: document.getElementById("svc").value,
+      calendar_event_id: res.appointment_id || "",
+      emergency_flag: false,
+      follow_up_needed: false,
+      transfer_attempted: false,
+      transfer_result: "not_attempted"
+    });
+
+    document.getElementById("sum").innerHTML =
+      row("Date", parsed.date_spoken) +
+      row("Time", picked.time_spoken) +
+      row("Dentist", parsed.doctor_name) +
+      row("Treatment", document.getElementById("svc").value) +
+      row("Name", nm);
+    go(5);
+  } catch (e) {
+    show("s4msg","err","Could not reach the clinic system. Please call +92 300 6288033.");
+    btn.disabled = false;
+    btn.textContent = "Confirm booking";
+  }
+}
+
+function row(k,v){
+  return '<div><span>'+k+'</span><span>'+v+'</span></div>';
+}
+</script>
 </body>
 </html>
