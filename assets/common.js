@@ -30,6 +30,7 @@
           await new Promise(function (ok) { setTimeout(ok, 1500 * attempt); });
           continue; // safe: same request_id
         }
+        offline(OFFLINE.indexOf(j.status) >= 0 || (j.status === "uncertain" && r.status >= 500));
         return j;
       } catch (e) {
         if (attempt < 3) { await new Promise(function (ok) { setTimeout(ok, 1500 * attempt); }); continue; }
@@ -71,14 +72,32 @@
     rate_limited: "Too many requests. Please wait a minute and try again.",
     uncertain: "We couldn't confirm the result because of a connection problem. Please don't book again. We are checking and will contact you; you can also check under 'Manage my booking'.",
     network_error: "No connection. Please check your internet and try again.",
-    service_unavailable: "The booking system is busy. Please try again in a moment.",
-    timeout: "The booking system is busy. Please try again in a moment.",
+    service_unavailable: "Online booking is temporarily offline. Please try again in a few minutes, or call the clinic.",
+    timeout: "Online booking is temporarily offline. Please try again in a few minutes, or call the clinic.",
+    invalid_token: "This link isn't valid. Please use the newest reminder we sent you, or call the clinic.",
+    appointment_not_active: "This appointment is no longer active (it was cancelled or has already passed). You can book a new time below.",
+    appointment_changed: "Your appointment time has changed since this reminder was sent. Please check the new time under 'Manage my booking'.",
     server_not_configured: "Online booking is temporarily unavailable. Please call the clinic.",
     server_auth_failed: "Online booking is temporarily unavailable. Please call the clinic.",
     invalid_input: "Some details were not valid. Please check and try again.",
     internal_error: "Something went wrong on our side. Please try again or call the clinic.",
     patient_name_required: "Please enter your full name."
   };
+  // Banner shown on every page while the booking system can't be reached; it disappears on the next good answer.
+  var OFFLINE = ["service_unavailable", "timeout", "server_not_configured", "server_auth_failed"];
+  function offline(on, text) {
+    var b = document.getElementById("avOffline");
+    if (!on) { if (b) b.hidden = true; return; }
+    if (!b) {
+      b = document.createElement("div"); b.id = "avOffline"; b.className = "offline"; b.setAttribute("role", "alert");
+      var host = document.querySelector(".wrap, .shell") || document.body;
+      host.insertBefore(b, host.firstChild);
+    }
+    b.textContent = text || ("Online booking is temporarily offline. Appointments you already have are safe. Please try again in a few minutes" +
+      (CFG.clinicPhone ? ", or call " + CFG.clinicPhone + "." : ", or call the clinic."));
+    b.hidden = false;
+  }
+
   function say(status) { return TEXT[status] || "Something went wrong. Please try again."; }
 
   var catalog = null;
@@ -145,5 +164,5 @@
 
   window.AV = { api: api, say: say, uuid: uuid, getCatalog: getCatalog, fmtTime: fmtTime, fmtDate: fmtDate,
     localToday: localToday, addDays: addDays, $: $, show: show, step: step, busy: busy, esc: esc,
-    icsDownload: icsDownload, applyBranding: applyBranding, CFG: CFG };
+    icsDownload: icsDownload, applyBranding: applyBranding, CFG: CFG, offline: offline, OFFLINE: OFFLINE };
 })();

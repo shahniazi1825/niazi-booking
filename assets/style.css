@@ -45,3 +45,5 @@ button.danger{background:var(--danger)}
 .spin{color:var(--muted);padding:18px 0;text-align:center}
 footer{text-align:center;font-size:13px;color:var(--muted);margin-top:20px}
 .sr{position:absolute;left:-9999px}
+.offline{background:var(--warn-bg);color:var(--warn);border:1px solid #F59E0B;border-left-width:5px;border-radius:10px;padding:12px 16px;margin:0 0 12px;font-size:15px;font-weight:600}
+.offline[hidden]{display:none}

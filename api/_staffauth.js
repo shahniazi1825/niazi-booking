@@ -101,3 +101,24 @@ export async function getActor(req, res, wantedClinic) {
   const m = ms.find((x) => x.clinic_slug === want) || ms[0];
   return { actor: { user_id: user.id, email: user.email, role: m.role, clinic_slug: m.clinic_slug, clinic_name: m.clinic_name, timezone: m.timezone }, memberships: ms };
 }
+
+// Sets a new password for the user who owns access token `at`. Returns { ok } or { ok:false, status }.
+export async function changePassword(at, password) {
+  if (!supa()) return { ok: false, status: "server_not_configured" };
+  const r = await sfetch("/auth/v1/user", { method: "PUT", headers: { authorization: `Bearer ${at}` }, body: JSON.stringify({ password }) });
+  if (r.status === 200) return { ok: true };
+  const code = String(r.json?.error_code || r.json?.code || "");
+  if (code === "same_password") return { ok: false, status: "same_password" };
+  if (code === "weak_password" || r.status === 422) return { ok: false, status: "weak_password" };
+  if (r.status === 429) return { ok: false, status: "rate_limited" };
+  return { ok: false, status: "service_unavailable" };
+}
+
+// Signs out every other session of this user (other browsers, a lost laptop). The session for `at` stays.
+export async function logoutOthers(at) {
+  if (!supa() || !at) return;
+  try { await sfetch("/auth/v1/logout?scope=others", { method: "POST", headers: { authorization: `Bearer ${at}` } }); } catch {}
+}
+
+// Drop cached sign-ins of one user on this server instance (other instances expire theirs within 30 s).
+export function forgetUser(userId) { for (const [k, v] of cache) if (v.user && v.user.id === userId) cache.delete(k); }

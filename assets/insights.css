@@ -157,7 +157,10 @@ button{font:inherit;color:inherit}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .q0{fill:var(--q0)}.q1{fill:var(--q1)}.q2{fill:var(--q2)}.q3{fill:var(--q3)}.q4{fill:var(--q4)}.q5{fill:var(--q5)}.q6{fill:var(--q6)}.q7{fill:var(--q7)}
 .hm text.v{font-size:11px;font-weight:600;pointer-events:none;font-variant-numeric:tabular-nums}
-.hm text.v.dark{fill:#fff}.hm text.v.light{fill:#0d1b2a}
+.hm text.v{fill:#0d1b2a}.hm text.v.hi{fill:#fff}
+/* Dark theme: the ramp runs the other way (full = bright), so the label colours swap to keep contrast. */
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .hm text.v{fill:#fff}:root:where(:not([data-theme="light"])) .hm text.v.hi{fill:#0d1b2a}}
+:root[data-theme="dark"] .hm text.v{fill:#fff}:root[data-theme="dark"] .hm text.v.hi{fill:#0d1b2a}
 .scale{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);margin-top:10px}
 .scale i{width:22px;height:10px;border-radius:3px;display:inline-block}
 .scale i.q1{background:var(--q1)}.scale i.q3{background:var(--q3)}.scale i.q5{background:var(--q5)}.scale i.q7{background:var(--q7)}
@@ -222,3 +225,5 @@ table.data td.n,table.data th.n{text-align:right}
 @media print{
   .toolbar,.bar-actions,.toggle,.foot{display:none}.card{box-shadow:none;break-inside:avoid}
 }
+/* Shown while the system can't be reached */
+.offline{background:color-mix(in srgb,var(--warn) 14%,var(--surface));color:var(--warn-ink);border:1px solid color-mix(in srgb,var(--warn) 60%,transparent);border-left-width:5px;border-radius:12px;padding:12px 16px;margin:12px 0 0;font-weight:600}

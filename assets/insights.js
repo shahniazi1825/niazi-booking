@@ -76,7 +76,9 @@
       var r = await fetch(path, { method: method || "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
         body: method === "GET" ? undefined : JSON.stringify(Object.assign({ request_id: A.uuid() }, body || {})) });
       var j = await r.json().catch(function () { return { success: false, status: "service_unavailable" }; });
-      j._http = r.status; return j;
+      j._http = r.status;
+      A.offline(A.OFFLINE.indexOf(j.status) >= 0, "Insights is temporarily offline because the clinic system can't be reached. Your data is safe; figures will load again when it's back.");
+      return j;
     } catch (e) { return { success: false, status: "network_error" }; }
   }
 
@@ -132,7 +134,9 @@
 
   /* ---------- load ---------- */
   var STATUS = { forbidden_for_role: "Insights is for managers and admins.", not_signed_in: "Please sign in again.",
-    range_too_long: "Please choose a range of one year or less.", invalid_range: "Please choose a start date before the end date." };
+    range_too_long: "Please choose a range of one year or less.", invalid_range: "Please choose a start date before the end date.",
+    service_unavailable: "The clinic system is temporarily offline. Please try again in a few minutes.", timeout: "The clinic system is temporarily offline. Please try again in a few minutes.",
+    network_error: "No internet connection. Check the connection and try again." };
   async function load(force) {
     var key = S.tab + "|" + S.from + "|" + S.to + "|" + (S.me && S.me.clinic_slug), seq = ++S.seq;
     if (!force && S.cache[key] && Date.now() - S.cache[key].t < 120000) { render(S.cache[key].d); return; }
@@ -301,7 +305,7 @@
       var r = wds.indexOf(c.wd), p = c.pct == null ? 0 : +c.pct, q = p >= 95 ? 7 : p >= 85 ? 6 : p >= 70 ? 5 : p >= 55 ? 4 : p >= 40 ? 3 : p >= 25 ? 2 : p > 0 ? 1 : 0;
       var x = lw + (c.hr - h0) * cw + 2, y = top + r * (ch + 4);
       var rect = svgEl("rect", { class: "cell q" + q, x: x, y: y, width: Math.max(4, cw - 4), height: ch, rx: 5 }); delay(rect, i, 6); s.appendChild(rect);
-      if (cw > 30) { var tx = svgEl("text", { class: "v " + (q >= 4 ? "dark" : "light"), x: x + (cw - 4) / 2, y: y + ch / 2 + 4, "text-anchor": "middle" }); tx.textContent = Math.round(p); s.appendChild(tx); }
+      if (cw > 30) { var tx = svgEl("text", { class: "v" + (q >= 5 ? " hi" : ""), x: x + (cw - 4) / 2, y: y + ch / 2 + 4, "text-anchor": "middle" }); tx.textContent = Math.round(p); s.appendChild(tx); }
       bindTip(rect, function () { return tipRows(DAYS[c.wd - 1] + " " + (c.hr < 10 ? "0" : "") + c.hr + ":00–" + (c.hr + 1 < 10 ? "0" : "") + (c.hr + 1) + ":00",
         [{ k: "Filled", v: Math.round(p) + "%" }, { k: "Booked", v: fmtInt(c.booked / 60) + " h" }, { k: "Available", v: fmtInt(c.cap / 60) + " h" }]); });
     });
@@ -401,7 +405,7 @@
     v.appendChild(ks);
     var hm = d.heatmap || [];
     var drawH = function (b) { heatmap(b, hm); };
-    v.appendChild(withChart(card("When your chairs are empty", "How full each hour of the week was · darker = fuller", { draw: drawH,
+    v.appendChild(withChart(card("When your chairs are empty", "How full each hour of the week was · stronger colour = fuller", { draw: drawH,
       table: { cols: ["Day", "Hour", "Filled %", "Booked h", "Available h"], rows: hm.map(function (c) { return [DAYS[c.wd - 1], c.hr + ":00", c.pct, fmt1(c.booked / 60), fmt1(c.cap / 60)]; }) } }), drawH));
     var g = grid("grid2 even");
     var di = docs.map(function (x) { return { label: x.name, value: x.pct || 0, tip: tipRows(x.name, [{ k: "Filled", v: (x.pct == null ? "–" : x.pct + "%") }, { k: "Appointments", v: fmtInt(x.appointments) }, { k: "No-shows", v: fmtInt(x.no_shows) }, { k: "Available", v: fmtInt(x.cap / 60) + " h" }]) }; });

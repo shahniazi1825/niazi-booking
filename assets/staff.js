@@ -9,7 +9,11 @@
     email_belongs_to_another_patient: "That email belongs to another patient record.", note_required: "Please add a short note.",
     already_closed: "This task was already closed.", visit_not_started: "You can only mark this after the appointment time.",
     not_confirmed: "This appointment is no longer confirmed.", query_too_short: "Type at least 3 characters.",
-    override_reason_required: "A reason is required for an override.", unchanged: "Nothing changed."
+    override_reason_required: "A reason is required for an override.", unchanged: "Nothing changed.",
+    service_unavailable: "The system is temporarily offline. Please try again in a few minutes.", timeout: "The system is temporarily offline. Please try again in a few minutes.",
+    network_error: "No internet connection on this computer. Check the connection and try again.",
+    wrong_current_password: "Your current password is wrong.", weak_password: "Choose a longer, harder-to-guess password (at least 10 characters).",
+    same_password: "The new password must be different from the current one.", rate_limited: "Too many attempts. Please wait 15 minutes and try again."
   };
   var say = function (s) { return STATUS[s] || A.say(s); };
   var writer = function () { return me && me.role !== "viewer"; };
@@ -21,6 +25,8 @@
         body: method === "GET" ? undefined : JSON.stringify(Object.assign({ request_id: A.uuid() }, body || {})) });
       var j = await r.json().catch(function () { return { success: false, status: "service_unavailable" }; });
       if (r.status === 401 && path.indexOf("/session") < 0) { showLogin("Your session ended. Please sign in again."); }
+      A.offline(A.OFFLINE.indexOf(j.status) >= 0 || (j.status === "uncertain" && r.status >= 500),
+        "The clinic system is temporarily offline. Appointments already booked are safe. Write new bookings on paper and enter them when it's back; this page checks again every minute.");
       return j;
     } catch (e) { return { success: false, status: "network_error" }; }
   }
@@ -56,6 +62,33 @@
   $("clinicSwitch").addEventListener("change", async function () {
     var r = await call("/api/staff/session", { action: "switch", clinic_slug: this.value });
     if (r.success) { var m = await call("/api/staff/session", null, "GET"); if (m.success) signedIn(m.user, m.memberships); } else alert(say(r.status));
+  });
+
+  // ---------- change password ----------
+  $("pwLink").addEventListener("click", function (e) {
+    e.preventDefault();
+    var b = dialog('<h2>Change password</h2><form id="pwForm" novalidate>' +
+      '<input type="email" autocomplete="username" hidden value="' + A.esc(me ? me.email : "") + '">' +
+      '<label for="pwCur">Current password</label><input id="pwCur" type="password" autocomplete="current-password" required>' +
+      '<label for="pwNew">New password (at least 10 characters)</label><input id="pwNew" type="password" autocomplete="new-password" minlength="10" required>' +
+      '<label for="pwNew2">New password again</label><input id="pwNew2" type="password" autocomplete="new-password" required>' +
+      '<button type="submit" id="pwBtn">Change password</button><p id="pwMsg" class="msg"></p>' +
+      '<p class="hint">Other computers signed in with this account will be signed out.</p></form>');
+    b.querySelector("#pwForm").addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      var cur = $("pwCur").value, nw = $("pwNew").value, nw2 = $("pwNew2").value;
+      if (!cur) { A.show("pwMsg", "err", "Enter your current password."); return; }
+      if (nw.length < 10) { A.show("pwMsg", "err", say("weak_password")); return; }
+      if (nw !== nw2) { A.show("pwMsg", "err", "The two new passwords don't match."); return; }
+      if (nw === cur) { A.show("pwMsg", "err", say("same_password")); return; }
+      A.busy($("pwBtn"), true, "Saving…");
+      var r = await call("/api/staff/session", { action: "change_password", current_password: cur, new_password: nw });
+      A.busy($("pwBtn"), false);
+      $("pwCur").value = ""; $("pwNew").value = ""; $("pwNew2").value = "";
+      if (r.success) { $("pwBtn").disabled = true; A.show("pwMsg", "ok", "Password changed. Use the new password next time you sign in."); }
+      else A.show("pwMsg", "err", say(r.status));
+    });
+    $("pwCur").focus();
   });
 
   // ---------- tabs ----------
@@ -112,7 +145,7 @@
     r.appointments.forEach(function (a) {
       var d = document.createElement("div"); d.className = "item";
       var started = Date.parse(a.starts_at) <= Date.now();
-      d.innerHTML = '<div class="main"><b>' + A.esc(A.fmtTime(a.starts_at, tz)) + "</b> " + A.esc(a.patient_name) + badge(a.status) + (a.from_waitlist ? badge("wl", "from waitlist") : "") +
+      d.innerHTML = '<div class="main"><b>' + A.esc(A.fmtTime(a.starts_at, tz)) + "</b> " + A.esc(a.patient_name) + badge(a.status) + (a.from_waitlist ? badge("wl", "from waitlist") : "") + (a.patient_confirmed && a.status === "confirmed" ? badge("pc", "✓ patient confirmed") : "") +
         '<div class="muted">' + A.esc(a.service_name || "") + " · " + A.esc(a.doctor_name) + " · " + A.esc(a.phone || a.email || "") + " · via " + A.esc(a.source_channel) + "</div></div>" +
         '<div class="acts"></div>';
       var acts = d.querySelector(".acts");

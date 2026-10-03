@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirm your appointment — Clinic</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><h1 data-clinic-name>Our clinic</h1><p>Appointment reminder</p></div></header>
+<main class="card" aria-live="polite">
+  <section id="c1" class="c step on">
+    <h2>Are you coming to your appointment?</h2>
+    <p class="hint">Please let us know you're coming. If you can't make it, change or cancel instead so someone else can have the time.</p>
+    <button id="yes" type="button">Yes, I'm coming</button>
+    <button type="button" class="ghost" data-href="/manage.html">I need to change or cancel</button>
+    <p id="cMsg" class="msg"></p>
+  </section>
+  <section id="c2" class="c step">
+    <h2>Thank you, see you soon</h2>
+    <div class="msg ok" id="cOk">We've let the clinic know you're coming.</div>
+    <div class="sum" id="cSummary"></div>
+    <button type="button" class="ghost" id="cIcs">Add to my calendar</button>
+    <button type="button" class="ghost" data-href="/manage.html">Change or cancel</button>
+  </section>
+</main>
+<footer>Need help? Call <span data-clinic-phone>the clinic</span>.</footer>
+</div>
+<script src="/assets/config.js"></script>
+<script src="/assets/common.js"></script>
+<script src="/assets/confirm.js"></script>
+</body>
+</html>

@@ -23,6 +23,8 @@ const OPS = {
   "emergency":          [(b) => clean({ name: str(b.name, 120), phone: phone(b.phone), message: str(b.message, 1000) }), 5, true],
   "continuity-resume":  [(b) => clean({ continuation_token: uuid(b.continuation_token) }), 20, false],
   "waitlist-accept":    [(b) => clean({ offer_token: uuid(b.offer_token) }), 10, true],
+  "confirm-attendance": [(b) => clean({ token: typeof b.token === "string" && /^[A-Za-z0-9_-]{20,100}$/.test(b.token) ? b.token : undefined }), 20, true],
+  "health":             [() => ({}), 30, false],
   "waitlist-join":      [(b) => clean({
                             full_name: str(b.full_name, 120), phone: phone(b.phone), email: email(b.email),
                             service: str(b.service, 60), doctor: str(b.doctor, 60),
@@ -31,11 +33,33 @@ const OPS = {
                             consent_to_contact: bool(b.consent_to_contact) }), 5, true]
 };
 
+// Optional: AVENSO_CLINIC_SLUG pins this site to one clinic. Unset = the database's default clinic.
+const SLUG = /^[a-z0-9][a-z0-9-]{1,62}$/;
+const clinicSlug = () => { const s = String(process.env.AVENSO_CLINIC_SLUG || "").trim().toLowerCase(); return SLUG.test(s) ? s : undefined; };
+
+// Uptime monitors call GET/HEAD /api/public/health. 200 = website, n8n and database all answer; 503 = something is down.
+// Answers are reused for 30 s so several monitor locations checking every minute cost at most 2 n8n runs a minute.
+let lastHealth = { at: 0, out: null };
+async function health(req, res) {
+  const ttl = Number(process.env.AVENSO_HEALTH_CACHE_MS ?? 30000);
+  const fresh = lastHealth.out && Date.now() - lastHealth.at < ttl;
+  const out = fresh ? lastHealth.out : await callN8n({ channel: "public", op: "health", headerName: "x-avenso-public-key", secret: process.env.AVENSO_PUBLIC_KEY,
+    body: clean({ request_id: crypto.randomUUID(), session_id: "health", clinic_slug: clinicSlug(), payload: {} }), timeoutMs: 10000 });
+  if (!fresh) lastHealth = { at: Date.now(), out };
+  const ok = out.status === 200 && out.json?.success === true && out.json?.clinic_ready === true;
+  if (req.method === "HEAD") { res.statusCode = ok ? 200 : 503; res.setHeader("cache-control", "no-store"); return res.end(); }
+  return send(res, ok ? 200 : 503, ok ? { ok: true, status: "ok", time: out.json.time } : { ok: false, status: out.json?.status === "ok" ? "clinic_not_ready" : (out.json?.status || "service_unavailable") });
+}
+
 export default async function handler(req, res) {
+  const op = String(req.query?.op || "").toLowerCase();
+  if (op === "health" && (req.method === "GET" || req.method === "HEAD")) {
+    if (rateLimited(`${clientIp(req)}:health`, 30, 60000)) return send(res, 429, { ok: false, status: "rate_limited" });
+    return health(req, res);
+  }
   if (req.method !== "POST") { res.setHeader("allow", "POST"); return send(res, 405, { success: false, status: "method_not_allowed" }); }
   if (!sameOrigin(req)) return send(res, 403, { success: false, status: "forbidden_origin" });
 
-  const op = String(req.query?.op || "").toLowerCase();
   const spec = OPS[op];
   if (!spec) return send(res, 404, { success: false, status: "unsupported_operation" });
 
@@ -50,11 +74,15 @@ export default async function handler(req, res) {
   if (!body || typeof body !== "object" || Array.isArray(body)) return send(res, 400, { success: false, status: "invalid_json" });
 
   const payload = spec[0](body);
+  if (op === "health") return health(req, res);
+  // A malformed confirmation link can never match, so answer without a round trip.
+  if (op === "confirm-attendance" && !payload.token) return send(res, 200, { success: false, status: "invalid_token" });
   // Same request_id on retry = the booking core replays the original answer instead of acting twice.
   const requestId = uuid(body.request_id) || crypto.randomUUID();
   const upstreamBody = op === "waitlist-accept"
     ? { request_id: requestId, offer_token: payload.offer_token }
     : { request_id: requestId, session_id: "web", payload };
+  if (clinicSlug()) upstreamBody.clinic_slug = clinicSlug();
 
   const out = await callN8n({
     channel: "public", op, headerName: "x-avenso-public-key",

@@ -28,3 +28,4 @@ dialog::backdrop{background:rgba(15,23,42,.45)}
 .empty{color:var(--muted);font-size:14px;padding:8px 0}
 .editgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
 #nav{display:flex;gap:16px;align-items:center;flex-wrap:wrap}#nav select{width:auto;padding:6px 8px;font-size:14px}
+.badge.pc{background:#ECFDF5;color:#065F46}
